@@ -1,4 +1,4 @@
-// +build linux darwin
+// +build windows
 
 package exec
 
@@ -9,9 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"runtime"
 	"strconv"
-	"syscall"
 	"time"
 
 	"github.com/armon/circbuf"
@@ -86,13 +84,9 @@ func applyFn(ctx context.Context) error {
 				cmdargs = append(cmdargs, arg)
 			}
 		}
-	} else {
-		if runtime.GOOS == "windows" {
-			cmdargs = []string{"cmd", "/C"}
-		} else {
-			cmdargs = []string{"/bin/sh", "-c"}
-		}
 	}
+	cmdargs = []string{"cmd", "/C"}
+
 	cmdargs = append(cmdargs, command)
 
 	workingdir := data.Get("working_dir").(string)
@@ -137,12 +131,6 @@ func applyFn(ctx context.Context) error {
 	// Setup the command
 
 	cmd := exec.CommandContext(cmdCtx, cmdargs[0], cmdargs[1:]...)
-
-	if runtime.GOOS != "windows" {
-		sysProcessAttr := syscall.SysProcAttr{Setpgid: true}
-		cmd.SysProcAttr = &sysProcessAttr
-	}
-
 	cmd.Stderr = pw
 	cmd.Stdout = pw
 	// Dir specifies the working directory of the command.
@@ -182,13 +170,6 @@ func applyFn(ctx context.Context) error {
 	select {
 	case <-copyDoneCh:
 	case <-ctx.Done():
-	case <-cmdCtx.Done():
-		if runtime.GOOS != "windows" {
-			pgid, err := syscall.Getpgid(cmd.Process.Pid)
-			if err == nil {
-				syscall.Kill(-pgid, 15)
-			}
-		}
 	}
 
 	if err != nil {
