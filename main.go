@@ -1,7 +1,7 @@
 package main
 
 import (
-	exec "github.com/Anil-CM/safe-local-exec/exec"
+	exec "github.com/IBM-Cloud/terraform-provisioner-safe-local-exec/exec"
 	"github.com/hashicorp/terraform/plugin"
 	"github.com/hashicorp/terraform/terraform"
 )
